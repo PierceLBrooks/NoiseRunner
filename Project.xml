@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildster directory="../build" distribution="../Distribution">
+  <project directory="../Project">
+    <dependencies>
+      <dependency>
+        <label>tge</label>
+        <subpath>build</subpath>
+        <remote>
+          <url>https://github.com/PierceLBrooks/TyrantGameEngine.git</url>
+          <git_repo>
+            <branch>master</branch>
+            <credentials>
+              <username>username</username>
+              <password>password</password>
+            </credentials>
+          </git_repo>
+        </remote>
+        <build>
+          <pre>
+            <set>
+              <key>BUILD</key>
+              <value><data id="BUILDSTER_VARIANT"></data></value>
+            </set>
+            <set>
+              <key>ARCH</key>
+              <value>32</value>
+            </set>
+          </pre>
+          <arguments></arguments>
+          <shells>
+            <shell>
+              <work><origin></origin>/Build Scripts/<data id="BUILDSTER_OS"></data></work>
+              <commands>
+                <switch id="BUILDSTER_OS">
+                  <case check="Windows"><command>mingw32-make</command></case>
+                  <case check="Linux"><command>make</command></case>
+                  <case check="Darwin"><command>make</command></case>
+                  <default><quit></quit></default>
+                </switch>
+              </commands>
+            </shell>
+          </shells>
+        </build>
+        <exports>
+          <export type="headers">
+            <key>TGE_INCLUDE_PATH_INNER</key>
+            <value><origin></origin>/include/Tyrant</value>
+          </export>
+          <export type="headers">
+            <key>TGE_INCLUDE_PATH_OUTER</key>
+            <value><origin></origin>/include</value>
+          </export>
+          <export type="libraries">
+            <key>TGE_LIBRARIES_PATH</key>
+            <value><origin></origin>/Build Scripts/<data id="BUILDSTER_OS"></data>/bin/<data id="BUILDSTER_VARIANT"></data>/32-bit</value>
+          </export>
+        </exports>
+        <imports></imports>
+      </dependency>
+    </dependencies>
+    <targets>
+      <target type="executable">
+        <label>noiserunner</label>
+        <generator>
+          <switch id="BUILDSTER_OS">
+            <case check="Windows">CodeBlocks - MinGW Makefiles</case>
+            <case check="Linux">CodeBlocks - Unix Makefiles</case>
+            <case check="Darwin">Xcode</case>
+            <default><quit></quit></default>
+          </switch>
+        </generator>
+        <definitions></definitions>
+        <links>
+          <link>Tyrant*</link>
+          <if_check id="BUILDSTER_OS" check="Windows">
+            <link>setupapi</link>
+            <link>iphlpapi</link>
+            <link>psapi</link>
+            <link>userenv</link>
+            <link>gdi32</link>
+            <link>crypt32</link>
+            <link>ws2_32</link>
+          </if_check>
+        </links>
+        <imports>
+          <import>tge</import>
+        </imports>
+      </target>
+    </targets>
+  </project>
+</buildster>
