@@ -1,0 +1,12 @@
+libTyrant32.dll
+Font/DATAT___.TTF
+2
+32
+2
+3
+3
+3
+0
+1
+2
+3

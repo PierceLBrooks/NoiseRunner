@@ -1,0 +1,62 @@
+uniform float fadeFactor;
+uniform float timeBuffer;
+uniform vec3 colorBase;
+uniform vec3 colorBasePrev;
+uniform vec3 colorInvert;
+uniform vec3 colorInvertPrev;
+uniform vec2 textureSize;
+uniform vec4 textureRect;
+uniform sampler2D texture;
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+void main()
+{
+    vec4 pixel = texture2D(texture,gl_TexCoord[0].xy);
+    vec3 pixelBase = pixel.rgb;
+    vec3 pixelBasePrev = pixelBase;
+    vec3 pixelInvert = 1.0-pixelBase;
+    vec3 pixelInvertPrev = pixelInvert;
+    vec2 position = gl_TexCoord[0].xy*textureSize;
+    position -= textureRect.xy;
+    position /= textureRect.zw;
+    for (int i = 0; i != 3; ++i)
+    {
+        pixelBase[i] = mix(colorBase[i],pixelBase[i],pixelBase[i]);
+        pixelBasePrev[i] = mix(colorBasePrev[i],pixelBasePrev[i],pixelBasePrev[i]);
+        pixelInvert[i] = mix(pixelInvert[i],colorInvert[i],pixelInvert[i]);
+        pixelInvertPrev[i] = mix(pixelInvertPrev[i],colorInvertPrev[i],pixelInvertPrev[i]);
+    }
+    float axisFactor;
+    if (fadeFactor < -0.5)
+    {
+        axisFactor = mix(position.x,position.y,4.0*abs(-0.75-fadeFactor));
+    }
+    else if (fadeFactor < 0.0)
+    {
+        axisFactor = mix(position.x,1.0-position.y,4.0*abs(-0.25-fadeFactor));
+    }
+    else if (fadeFactor < 0.5)
+    {
+        axisFactor = mix(1.0-position.x,1.0-position.y,4.0*abs(0.25-fadeFactor));
+    }
+    else
+    {
+        axisFactor = mix(1.0-position.x,position.y,4.0*abs(0.75-fadeFactor));
+    }
+    float mixFactor = mix(0.0,smoothstep(0.0,1.0,mix(2.0*abs(0.5-axisFactor),1.0-(2.0*abs(0.5-axisFactor)),abs(fadeFactor))),1.0-(2.0*abs(0.5-timeBuffer)));
+    //gl_FragColor = vec4(vec3(mixFactor),1.0);
+    //return;
+    vec3 pixelFinal = mix(mix(pixelBase,pixelBasePrev,mixFactor),mix(pixelInvert,pixelInvertPrev,mixFactor),1.0-smoothstep(0.0,1.0,abs(fadeFactor)));
+    vec3 pixelFinalPrev = mix(mix(pixelBasePrev,pixelBase,mixFactor),mix(pixelInvertPrev,pixelInvert,mixFactor),1.0-smoothstep(0.0,1.0,abs(fadeFactor)));
+    for (int i = 1; i != 3; ++i)
+    {
+        pixelFinal[i] = smoothstep(0.0,1.0,pixelFinal[i]);
+        pixelFinalPrev[i] = smoothstep(0.0,1.0,pixelFinalPrev[i]);
+    }
+    vec4 color = vec4(mix(hsv2rgb(pixelFinalPrev),hsv2rgb(pixelFinal),timeBuffer),pixel.a);
+    gl_FragColor = color*gl_Color;
+}
